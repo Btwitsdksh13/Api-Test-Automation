@@ -10,35 +10,52 @@ import static org.hamcrest.Matchers.*;
 
 public class AuthApiTest extends BaseTest {
 
-    // Public demo credentials documented by the FakeStore API.
-    private static final String USERNAME = "mor_2314";
-    private static final String PASSWORD = "83r5^_";
+    // Public demo credentials documented by DummyJSON.
+    private static final String USERNAME = "emilys";
+    private static final String PASSWORD = "emilyspass";
 
-    @Test(groups = "smoke", description = "Valid credentials return a token")
+    private String login() {
+        return given().spec(requestSpec)
+                .body(Map.of("username", USERNAME, "password", PASSWORD))
+                .post("/auth/login")
+                .then().statusCode(200)
+                .extract().path("accessToken");
+    }
+
+    @Test(groups = "smoke", description = "Valid credentials return an access token")
     public void loginWithValidCredentialsReturnsToken() {
         given().spec(requestSpec)
                 .body(Map.of("username", USERNAME, "password", PASSWORD))
         .when().post("/auth/login")
         .then().spec(okSpec)
-                .statusCode(anyOf(is(200), is(201)))
-                .body("token", not(emptyOrNullString()));
+                .statusCode(200)
+                .body("accessToken", not(emptyOrNullString()))
+                .body("username", equalTo(USERNAME));
     }
 
-    @Test(groups = "negative", description = "Wrong password is rejected and no token is issued")
+    @Test(groups = "negative", description = "Wrong password is rejected with 400 and no token")
     public void loginWithWrongPasswordIsRejected() {
         given().spec(requestSpec)
                 .body(Map.of("username", USERNAME, "password", "wrong-password"))
         .when().post("/auth/login")
-        .then().statusCode(anyOf(is(400), is(401)))
-                // The API returns a plain-text error, so a token must not appear anywhere in the body.
-                .body(not(containsString("token")))
-                .body(containsStringIgnoringCase("incorrect"));
+        .then().statusCode(400)
+                .body("message", equalTo("Invalid credentials"))
+                .body("accessToken", nullValue());
     }
 
-    @Test(groups = "negative", description = "Missing credentials are rejected")
-    public void loginWithEmptyBodyIsRejected() {
-        given().spec(requestSpec).body(Map.of())
-        .when().post("/auth/login")
-        .then().statusCode(anyOf(is(400), is(401)));
+    @Test(groups = "regression", description = "The token authorises access to the profile endpoint")
+    public void tokenAllowsAccessToProfile() {
+        given().spec(requestSpec).header("Authorization", "Bearer " + login())
+        .when().get("/auth/me")
+        .then().statusCode(200)
+                .body("username", equalTo(USERNAME));
+    }
+
+    @Test(groups = "negative", description = "Profile endpoint without a token returns 401")
+    public void profileWithoutTokenIsUnauthorized() {
+        given().spec(requestSpec)
+        .when().get("/auth/me")
+        .then().statusCode(401)
+                .body("message", not(emptyOrNullString()));
     }
 }
