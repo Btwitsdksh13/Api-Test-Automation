@@ -2,7 +2,7 @@
 
 [![API Tests](../../actions/workflows/api-tests.yml/badge.svg)](../../actions/workflows/api-tests.yml)
 
-A small, readable API test framework against the public [FakeStore API](https://fakestoreapi.com).
+A small, readable API test framework against the public [DummyJSON API](https://dummyjson.com).
 It shows how I structure API automation: reusable request/response specs, contract (JSON schema)
 validation, data-driven tests, negative cases, test groups and CI.
 
@@ -12,12 +12,12 @@ validation, data-driven tests, negative cases, test groups and CI.
 
 | Area | Tests |
 |------|-------|
-| Products | list, get by id, query params (`limit`, `sort`), filter by category (data-driven), create, update, delete, unknown id |
-| Auth | valid login returns a token, wrong password rejected, empty body rejected |
-| Carts | get by id with line items, filter by user |
+| Products | list, get by id, `limit`, pagination (`skip`), sort by price, search, filter by category (data-driven), create (201), update, delete, unknown id (404) |
+| Auth | valid login returns a token, wrong password rejected (400), token unlocks `/auth/me`, missing token rejected (401) |
+| Carts | get by id with line items, totals consistent, filter by user |
 | Contract | `GET /products/{id}` validated against a JSON schema (`src/test/resources/schemas/product.json`) |
 
-17 tests, grouped as `smoke`, `regression` and `negative`.
+21 tests, grouped as `smoke`, `regression` and `negative`.
 
 ## Design choices
 
@@ -34,7 +34,7 @@ Requires Java 17 and Maven.
 ```bash
 mvn test                                # whole suite
 mvn test -Dgroups=smoke                 # smoke only
-mvn test -DbaseUrl=https://fakestoreapi.com
+mvn test -DbaseUrl=https://dummyjson.com
 ```
 
 Reports are written to `target/surefire-reports`.
@@ -54,5 +54,5 @@ src/test/resources/schemas/product.json
 
 ## Notes on the demo API
 
-FakeStore does not persist writes, so create/update/delete tests assert on the response only.
-For unknown ids it returns an empty body instead of 404, and the test accepts either.
+DummyJSON simulates writes: create, update and delete return realistic responses but nothing is stored,
+so those tests assert on the response only. Demo credentials (`emilys` / `emilyspass`) are the public ones from its docs.
