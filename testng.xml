@@ -1,0 +1,8 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="FakeStore API Suite">
+  <test name="Smoke and Regression">
+    <packages>
+      <package name="com.daksh.api.tests"/>
+    </packages>
+  </test>
+</suite>
