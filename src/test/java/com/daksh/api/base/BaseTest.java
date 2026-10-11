@@ -18,7 +18,7 @@ import static org.hamcrest.Matchers.lessThan;
 public abstract class BaseTest {
 
     protected static final String BASE_URL =
-            System.getProperty("baseUrl", "https://fakestoreapi.com");
+            System.getProperty("baseUrl", "https://dummyjson.com");
 
     protected RequestSpecification requestSpec;
     protected ResponseSpecification okSpec;
